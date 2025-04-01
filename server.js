@@ -1,0 +1,40 @@
+const express = require('express');
+const cors = require('cors');
+const stripe = require('stripe')('sk_test_51R1AD7RvnYSCqc49knWp1O4KtvZleheQPlwuHDJrFEuyeSTrqld2Zbx1wxtHNKZyNr8iEBB3uoCau3oJeF5jdcFx00KlWdsuq9'); // Adicione sua chave secreta aqui
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.post('/create-checkout-session', async (req, res) => {
+    const { precoFinal } = req.body;
+
+    if (!precoFinal) {
+        return res.status(400).json({ error: "Preço final é obrigatório." });
+    }
+
+    try {
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [{
+                price_data: {
+                    currency: 'brl',
+                    product_data: { name: 'Produto Exemplo' },
+                    unit_amount: Math.round(precoFinal * 100) // Converte BRL para centavos
+                },
+                quantity: 1,
+            }],
+            mode: 'payment',
+            success_url: 'http://localhost:3000/sucesso',
+            cancel_url: 'http://localhost:3000/cancelado'
+        });
+
+        res.json({ id: session.id });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Erro ao criar sessão de pagamento." });
+    }
+});
+
+app.listen(3000, () => console.log("Servidor rodando na porta 3000"));

@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.save
+.cache/
+.npm/
+.nvm/
+.local/
+
